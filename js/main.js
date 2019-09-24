@@ -74,8 +74,9 @@ var createAd = function (ad) {
   var mapPin = TEMPLATE_MAP_PIN.cloneNode(true);
   mapPin.style.left = ad.location.x + 'px';
   mapPin.style.top = ad.location.y + 'px';
-  mapPin.children[0].src = ad.author.avatar;
-  mapPin.children[0].alt = ad.offer.title;
+  var mapPinAvatar = mapPin.querySelector('img');
+  mapPinAvatar.src = ad.author.avatar;
+  mapPinAvatar.alt = ad.offer.title;
   return mapPin;
 };
 
@@ -92,6 +93,5 @@ var windowMap = document.querySelector('.map');
 windowMap.classList.remove('map--faded');
 
 MAP_PINS.appendChild(addAds());
-// console.log(mapPin.offsetWidth);
-// console.log(mapPin.offsetHeight);
+
 
