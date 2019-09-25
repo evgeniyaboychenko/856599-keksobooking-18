@@ -3,6 +3,7 @@
 var NUMBER_OFFER = 8;
 var TITLE_OFFERS = ['Это лучшее предложение', 'Квартира в центре', 'Для одиночника', 'Дом с шикарным видом', 'Для большой компании'];
 var TYPE_HOUSES = ['palace', 'flat', 'house', 'bungalo'];
+var TYPE_HOUSES_MAP = {palace: 'Дворец', flat: 'Квартира', house: 'Дом', bungalo: 'Бунгало'};
 var TIME_CHECKIN = ['12:00', '13:00', '14:00'];
 var TIME_CHECKOUT = ['12:00', '13:00', '14:00'];
 var FEATURES = ['wifi', 'dishwasher', 'parking', 'washer', 'elevator', 'conditioner'];
@@ -17,6 +18,8 @@ var HEIGHT_PIN = 70;
 var MAP_PINS = document.querySelector('.map__pins');
 var WIDTH_MAP = MAP_PINS.clientWidth;
 
+var TEMPLATE_MAP_CARD = document.querySelector('#card').content.querySelector('.map__card');
+
 var createAdsData = function () {
   var ads = [];
   for (var i = 0; i < NUMBER_OFFER; i++) {
@@ -29,8 +32,8 @@ var createAdsData = function () {
         address: ADDRESSES_OFFERS[generateRandomNumber(ADDRESSES_OFFERS.length)],
         price: generateRandomRange(200, 2000),
         type: TYPE_HOUSES[generateRandomNumber(TYPE_HOUSES.length)],
-        rooms: generateRandomNumber(6) + 1,
-        guests: generateRandomNumber(20) + 1,
+        rooms: generateRandomNumber(30) + 1,
+        guests: generateRandomNumber(10) + 1,
         checkin: TIME_CHECKIN[generateRandomNumber(TIME_CHECKIN.length)],
         checkout: TIME_CHECKOUT[generateRandomNumber(TIME_CHECKOUT.length)],
         features: createRandomArray(FEATURES),
@@ -80,8 +83,8 @@ var createAd = function (ad) {
   return mapPin;
 };
 
+var ads = createAdsData();
 var addAds = function () {
-  var ads = createAdsData();
   var fragment = document.createDocumentFragment();
   for (var i = 0; i < NUMBER_OFFER; i++) {
     fragment.appendChild(createAd(ads[i]));
@@ -89,9 +92,65 @@ var addAds = function () {
   return fragment;
 };
 
+var getPropertyTypeName = function (key) {
+  return TYPE_HOUSES_MAP[key];
+};
+
+var createCardAd = function (ad) {
+  var mapCard = TEMPLATE_MAP_CARD.cloneNode(true);
+  var mapCardAvatar = mapCard.querySelector('.popup__avatar');
+  var mapCardTitle = mapCard.querySelector('.popup__title');
+  var mapCardAddress = mapCard.querySelector('.popup__text--address');
+  var mapCardPrice = mapCard.querySelector('.popup__text--price');
+  var mapCardType = mapCard.querySelector('.popup__type');
+  var mapCardCapacity = mapCard.querySelector('.popup__text--capacity');
+  var mapCardTime = mapCard.querySelector('.popup__text--time');
+  var mapCardFeatures = mapCard.querySelector('.popup__features');
+  var mapCardDescription = mapCard.querySelector('.popup__description');
+  var mapCardPhotos = mapCard.querySelector('.popup__photos');
+  var mapCardPhoto = mapCardPhotos.querySelector('.popup__photo');
+  mapCardTitle.textContent = ad.offer.title;
+  mapCardAddress.textContent = ad.offer.address;
+  mapCardPrice.textContent = ad.offer.price + '₽/ночь';
+  mapCardType.textContent = getPropertyTypeName(ad.offer.type);
+  mapCardCapacity.textContent = ad.offer.rooms + ' комнат' + getEndingWordRoom(ad.offer.rooms) + ' для ' + ad.offer.guests + ' гост' + ((ad.offer.guests === 1) ? 'я' : 'ей');
+  mapCardTime.textContent = 'Заезд после ' + ad.offer.checkin + ', выезд до ' + ad.offer.checkout;
+  mapCardFeatures.textContent = ad.offer.features;
+  mapCardDescription.textContent = ad.offer.description;
+  if (ad.offer.photos.length !== 0) {
+    mapCardPhoto.src = ad.offer.photos[0];
+    for (var i = 1; i < ad.offer.photos.length; i++) {
+      var mapCardImage = mapCardPhoto.cloneNode(true);
+      mapCardImage.src = ad.offer.photos[i];
+      mapCardPhotos.appendChild(mapCardImage);
+    }
+  } else {
+    mapCardPhotos.textContent = 'Фото жилья отсутствует';
+  }
+  mapCardAvatar.src = ad.author.avatar;
+  return mapCard;
+};
+
+var getEndingWordRoom = function (number) {
+  var ending = '';
+  if ((number < 10 || number > 20) && number % 10 === 1) {
+    ending = 'а';
+  } else if ((number < 10 || number > 20) && (number % 10 === 2 || number % 10 === 3 || number % 10 === 4)) {
+    ending = 'ы';
+  }
+  return ending;
+};
+
+var addCards = function () {
+  var fragment = document.createDocumentFragment();
+  fragment.appendChild(createCardAd(ads[0]));
+  return fragment;
+};
+
 var windowMap = document.querySelector('.map');
 windowMap.classList.remove('map--faded');
 
 MAP_PINS.appendChild(addAds());
-
+var MAP_FILTERS_CONTAINER = document.querySelector('.map__filters-container');
+MAP_FILTERS_CONTAINER.before(addCards());
 
