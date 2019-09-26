@@ -32,7 +32,7 @@ var createAdsData = function () {
         address: ADDRESSES_OFFERS[generateRandomNumber(ADDRESSES_OFFERS.length)],
         price: generateRandomRange(200, 2000),
         type: TYPE_HOUSES[generateRandomNumber(TYPE_HOUSES.length)],
-        rooms: generateRandomNumber(30) + 1,
+        rooms: generateRandomNumber(100) + 1,
         guests: generateRandomNumber(10) + 1,
         checkin: TIME_CHECKIN[generateRandomNumber(TIME_CHECKIN.length)],
         checkout: TIME_CHECKOUT[generateRandomNumber(TIME_CHECKOUT.length)],
@@ -115,7 +115,16 @@ var createCardAd = function (ad) {
   mapCardType.textContent = getPropertyTypeName(ad.offer.type);
   mapCardCapacity.textContent = ad.offer.rooms + ' комнат' + getEndingWordRoom(ad.offer.rooms) + ' для ' + ad.offer.guests + ' гост' + ((ad.offer.guests === 1) ? 'я' : 'ей');
   mapCardTime.textContent = 'Заезд после ' + ad.offer.checkin + ', выезд до ' + ad.offer.checkout;
-  mapCardFeatures.textContent = ad.offer.features;
+
+  mapCardFeatures.innerHTML = '';
+  for (var j = 0; j < ad.offer.features.length; j++) {
+    var feature = ad.offer.features[j];
+    var featureElement = document.createElement('li');
+    featureElement.classList.add('popup__feature');
+    featureElement.classList.add('popup__feature' + '--' + feature);
+    mapCardFeatures.appendChild(featureElement);
+  }
+
   mapCardDescription.textContent = ad.offer.description;
   if (ad.offer.photos.length !== 0) {
     mapCardPhoto.src = ad.offer.photos[0];
