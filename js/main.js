@@ -18,7 +18,10 @@ var HEIGHT_PIN = 70;
 var MAP_PINS = document.querySelector('.map__pins');
 var WIDTH_MAP = MAP_PINS.clientWidth;
 
+
 var TEMPLATE_MAP_CARD = document.querySelector('#card').content.querySelector('.map__card');
+
+var ENTER_KEYCODE = 13;
 
 var createAdsData = function () {
   var ads = [];
@@ -157,9 +160,120 @@ var addCards = function () {
 };
 
 var windowMap = document.querySelector('.map');
-windowMap.classList.remove('map--faded');
+/* временно для 4 дз
+// windowMap.classList.remove('map--faded');
+// добавление обявлений и карточки объявления
+// MAP_PINS.appendChild(addAds());
+// var MAP_FILTERS_CONTAINER = document.querySelector('.map__filters-container');
+// MAP_FILTERS_CONTAINER.before(addCards()); */
 
-MAP_PINS.appendChild(addAds());
-var MAP_FILTERS_CONTAINER = document.querySelector('.map__filters-container');
-MAP_FILTERS_CONTAINER.before(addCards());
+var formAd = document.querySelector('.ad-form');
+var fieldsetsAd = formAd.querySelectorAll('fieldset');
+var formFilters = document.querySelector('.map__filters');
+var fieldsetsFilters = formFilters.querySelectorAll('fieldset');
+var selectsFilters = formFilters.querySelectorAll('select');
+var mapPinMain = document.querySelector('.map__pin--main');
+var WIDTH_MAP_MAIN = mapPinMain.clientWidth;
+var HEIGHT_MAP_MAIN = mapPinMain.clientHeight;
+var addressField = formAd.querySelector('input[name="address"]');
+
+// добавление атрибута 'disabled'
+var setDisabledAttribute = function (field) {
+  for (var i = 0; i < field.length; i++) {
+    field[i].setAttribute('disabled', 'disabled');
+  }
+};
+
+// удаление атрибута 'disabled'
+var removeDisabledAttribute = function (field) {
+  for (var i = 0; i < field.length; i++) {
+    field[i].removeAttribute('disabled');
+  }
+};
+
+// поля формы не активны
+var setDisabledForm = function () {
+  setDisabledAttribute(fieldsetsAd);
+  setDisabledAttribute(fieldsetsFilters);
+  setDisabledAttribute(selectsFilters);
+};
+
+// поля формы активны
+var removeDisabledForm = function () {
+  removeDisabledAttribute(fieldsetsAd);
+  removeDisabledAttribute(fieldsetsFilters);
+  removeDisabledAttribute(selectsFilters);
+};
+
+// вычисление координат середины метки
+var setAddressMapMain = function () {
+  var xMapMain = parseInt(mapPinMain.style.left, 10) + Math.round(WIDTH_MAP_MAIN / 2);
+  var yMapMain = parseInt(mapPinMain.style.top, 10) + Math.round(HEIGHT_MAP_MAIN / 2);
+  addressField.setAttribute('value', xMapMain + ', ' + yMapMain);
+};
+
+// вычисление координат метки с концом
+var setAddressOnMapMainMove = function () {
+  var xMapMain = parseInt(mapPinMain.style.left, 10) + Math.round(WIDTH_MAP_MAIN / 2);
+  var yMapMain = parseInt(mapPinMain.style.top, 10) + HEIGHT_MAP_MAIN + 22;
+  addressField.setAttribute('value', xMapMain + ', ' + yMapMain);
+};
+
+var roomField = formAd.querySelector('select[name="rooms"]');
+var guestField = formAd.querySelector('select[name="capacity"]');
+
+// проверка соответствия комнат кол-ву гостей
+var checkedFields = function () {
+  if (roomField.value === '1' && guestField.value !== '1') {
+    guestField.setCustomValidity('Только 1 гость может быть для 1 комнаты ');
+  } else if ((roomField.value === '2' && guestField.value === '3') || (roomField.value === '2' && guestField.value === '0')) {
+    guestField.setCustomValidity('Только 1 или 2 гостя могут быть для 2 комнат ');
+  } else if (roomField.value === '3' && guestField.value === '0') {
+    guestField.setCustomValidity('Только 1, 2 или 3 гостя могут быть для 3 комнат');
+  } else if (roomField.value === '100' && guestField.value !== '0') {
+    guestField.setCustomValidity('100 комнат может быть только "не для гостей"');
+  } else {
+    guestField.setCustomValidity('');
+  }
+};
+
+
+checkedFields();
+roomField.addEventListener('change', function () {
+  checkedFields();
+});
+guestField.addEventListener('change', function () {
+  checkedFields();
+});
+
+setDisabledForm();
+setAddressMapMain();
+
+
+var onActiveFormPressEnter = function (evt) {
+  if (evt.keyCode === ENTER_KEYCODE) {
+    setAddressOnMapMainMove();
+    removeDisabledForm();
+    removeListenerActMapMain(evt);
+  }
+};
+
+var onActiveForm = function (evt) {
+  setAddressOnMapMainMove();
+  removeDisabledForm();
+  removeListenerActMapMain(evt);
+};
+
+// удалить обработчики события
+var removeListenerActMapMain = function () {
+  mapPinMain.removeEventListener('mousedown', onActiveForm);
+  mapPinMain.removeEventListener('keydown', onActiveFormPressEnter);
+};
+// добавить обработчики события
+var addListenerActMapMain = function () {
+  mapPinMain.addEventListener('mousedown', onActiveForm);
+  mapPinMain.addEventListener('keydown', onActiveFormPressEnter);
+};
+
+addListenerActMapMain();
 
