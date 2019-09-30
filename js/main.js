@@ -22,6 +22,21 @@ var WIDTH_MAP = MAP_PINS.clientWidth;
 var TEMPLATE_MAP_CARD = document.querySelector('#card').content.querySelector('.map__card');
 
 var ENTER_KEYCODE = 13;
+var windowMap = document.querySelector('.map');
+
+var formAd = document.querySelector('.ad-form');
+var fieldsetsAd = formAd.querySelectorAll('fieldset');
+var formFilters = document.querySelector('.map__filters');
+var fieldsetsFilters = formFilters.querySelectorAll('fieldset');
+var selectsFilters = formFilters.querySelectorAll('select');
+var mapPinMain = document.querySelector('.map__pin--main');
+var WIDTH_MAP_MAIN = mapPinMain.clientWidth;
+var HEIGHT_MAP_MAIN = mapPinMain.clientHeight;
+var addressField = formAd.querySelector('input[name="address"]');
+
+var roomField = formAd.querySelector('select[name="rooms"]');
+var guestField = formAd.querySelector('select[name="capacity"]');
+
 
 var createAdsData = function () {
   var ads = [];
@@ -159,23 +174,13 @@ var addCards = function () {
   return fragment;
 };
 
-var windowMap = document.querySelector('.map');
+
 /* временно для 4 дз
 // windowMap.classList.remove('map--faded');
 // добавление обявлений и карточки объявления
 // MAP_PINS.appendChild(addAds());
 // var MAP_FILTERS_CONTAINER = document.querySelector('.map__filters-container');
 // MAP_FILTERS_CONTAINER.before(addCards()); */
-
-var formAd = document.querySelector('.ad-form');
-var fieldsetsAd = formAd.querySelectorAll('fieldset');
-var formFilters = document.querySelector('.map__filters');
-var fieldsetsFilters = formFilters.querySelectorAll('fieldset');
-var selectsFilters = formFilters.querySelectorAll('select');
-var mapPinMain = document.querySelector('.map__pin--main');
-var WIDTH_MAP_MAIN = mapPinMain.clientWidth;
-var HEIGHT_MAP_MAIN = mapPinMain.clientHeight;
-var addressField = formAd.querySelector('input[name="address"]');
 
 // добавление атрибута 'disabled'
 var setDisabledAttribute = function (field) {
@@ -218,9 +223,6 @@ var setAddressOnMapMainMove = function () {
   var yMapMain = parseInt(mapPinMain.style.top, 10) + HEIGHT_MAP_MAIN + 22;
   addressField.setAttribute('value', xMapMain + ', ' + yMapMain);
 };
-
-var roomField = formAd.querySelector('select[name="rooms"]');
-var guestField = formAd.querySelector('select[name="capacity"]');
 
 // проверка соответствия комнат кол-ву гостей
 var checkedFields = function () {
