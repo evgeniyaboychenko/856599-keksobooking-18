@@ -358,13 +358,6 @@ var onAddCardClickPin = function (evt) {
   document.addEventListener('keydown', onClosePopupPressEscKey);
 };
 
-// создать карточку при нажатии на enter
-var onAddCardPressEnterPin = function (evt) {
-  if (evt.keyCode === ENTER_KEYCODE) {
-    onAddCardClickPin(evt);
-  }
-};
-
 // активация формы при нажатии Enter на главную метку
 var onActiveFormPressEnter = function (evt) {
   if (evt.keyCode === ENTER_KEYCODE) {
@@ -394,10 +387,9 @@ var addListenerActMapMain = function () {
 
 };
 
-// добавить обраточкики события для показа карточки объявления при нажатии на метку
+// добавить обраточкик события для показа карточки объявления при click на метку
 var addListenerAddCardPressPin = function () {
-  MAP_PINS.addEventListener('mousedown', onAddCardClickPin);
-  MAP_PINS.addEventListener('keydown', onAddCardPressEnterPin);
+  MAP_PINS.addEventListener('click', onAddCardClickPin);
 };
 
 addListenerActMapMain();
