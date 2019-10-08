@@ -63,7 +63,7 @@
   var onActiveForm = function (evt) {
     window.util.windowMap.classList.remove('map--faded');
     window.util.formAd.classList.remove('ad-form--disabled');
-    window.util.mapPins.appendChild(window.addAds());
+    window.util.mapPins.appendChild(window.map.addAds());
     setAddressOnMapMainMove();
     removeDisabledForm();
     removeListenerActMapMain(evt);

@@ -1,12 +1,12 @@
 'use strict';
 (function () {
-  var adsData = window.createAdsData();
+  var adsData = window.data.createAdsData();
 
   // добавление меток в фрагмент
-  window.addAds = function () {
+  var addAds = function () {
     var fragment = document.createDocumentFragment();
     for (var i = 0; i < window.util.numberOffer; i++) {
-      fragment.appendChild(window.createAd(adsData[i]));
+      fragment.appendChild(window.pin.createAd(adsData[i]));
     }
     return fragment;
   };
@@ -14,7 +14,7 @@
   // добавление карточки метки в фрагмент
   var addCardMap = function (number) {
     var fragment = document.createDocumentFragment();
-    fragment.appendChild(window.createCardAd(adsData[number]));
+    fragment.appendChild(window.card.createCardAd(adsData[number]));
     return fragment;
   };
 
@@ -70,4 +70,8 @@
   };
 
   addListenerAddCardPressPin();
+
+  window.map = {
+    addAds: addAds
+  };
 })();

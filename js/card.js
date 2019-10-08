@@ -19,7 +19,7 @@
     return ending;
   };
 
-  window.createCardAd = function (ad) {
+  var createCardAd = function (ad) {
     var mapCard = templateMapCard.cloneNode(true);
     var mapCardAvatar = mapCard.querySelector('.popup__avatar');
     var mapCardTitle = mapCard.querySelector('.popup__title');
@@ -61,5 +61,9 @@
     }
     mapCardAvatar.src = ad.author.avatar;
     return mapCard;
+  };
+
+  window.card = {
+    createCardAd: createCardAd
   };
 })();

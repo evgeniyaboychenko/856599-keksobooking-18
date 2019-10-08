@@ -37,7 +37,7 @@
     return randomArray;
   };
 
-  window.createAdsData = function () {
+  var createAdsData = function () {
     var ads = [];
     for (var i = 0; i < window.util.numberOffer; i++) {
       ads[i] = {
@@ -64,5 +64,9 @@
       };
     }
     return ads;
+  };
+
+  window.data = {
+    createAdsData: createAdsData
   };
 })();
