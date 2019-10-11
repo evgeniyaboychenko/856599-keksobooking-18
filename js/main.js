@@ -37,18 +37,23 @@
     removeDisabledAttribute(filterFormSelectList);
   };
 
-  // вычисление координат середины Main метки
-  var setAddressMapMain = function () {
-    var xMapMain = parseInt(mapPinMain.style.left, 10) + Math.round(widthMapMain / 2);
-    var yMapMain = parseInt(mapPinMain.style.top, 10) + Math.round(heightMapMain / 2);
-    addressField.setAttribute('value', xMapMain + ', ' + yMapMain);
+  // координаты (top,left) Main метки
+  var getAdressPositionPinMain = function () {
+    var xPinMain = parseInt(mapPinMain.style.left, 10);
+    var yPinMain = parseInt(mapPinMain.style.top, 10);
+    return {
+      x: xPinMain,
+      y: yPinMain
+    };
+  };
+  // установить начальные координат Main метки с концом
+  var setAddressPinMain = function () {
+    addressField.setAttribute('value', (getAdressPositionPinMain().x + Math.round(widthMapMain / 2)) + ', ' + (getAdressPositionPinMain().y + Math.round(heightMapMain / 2)));
   };
 
-  // вычисление координат Main метки с концом
-  var setAddressOnMapMainMove = function () {
-    var xMapMain = parseInt(mapPinMain.style.left, 10) + Math.round(widthMapMain / 2);
-    var yMapMain = parseInt(mapPinMain.style.top, 10) + heightMapMain + 22;
-    addressField.setAttribute('value', xMapMain + ', ' + yMapMain);
+  // установить координат Main метки с концом
+  var setAddressOnPinMainMove = function () {
+    addressField.setAttribute('value', (getAdressPositionPinMain().x + Math.round(widthMapMain / 2)) + ', ' + (getAdressPositionPinMain().y + heightMapMain + 16));
   };
   // ----------------------------------------------------------------------------
 
@@ -64,7 +69,7 @@
     window.util.windowMap.classList.remove('map--faded');
     window.util.formAd.classList.remove('ad-form--disabled');
     window.util.mapPins.appendChild(window.map.addAds());
-    setAddressOnMapMainMove();
+    setAddressOnPinMainMove();
     removeDisabledForm();
     removeListenerActMapMain(evt);
   };
@@ -74,13 +79,55 @@
     mapPinMain.removeEventListener('mousedown', onActiveForm);
     mapPinMain.removeEventListener('keydown', onActiveFormPressEnter);
   };
+
   // добавить обработчики события
   var addListenerActMapMain = function () {
     mapPinMain.addEventListener('mousedown', onActiveForm);
     mapPinMain.addEventListener('keydown', onActiveFormPressEnter);
   };
 
-  setAddressMapMain();
+  // получить координаты метки на карте
+  var getPositionPin = function (position, rangeStart, rangeEnd, shift, distance) {
+    if (position + distance - shift < rangeStart) {
+      return rangeStart - distance;
+    } else if (position + distance - shift > rangeEnd) {
+      return rangeEnd - distance;
+    } else {
+      return (position - shift);
+    }
+  };
+
+  var onMainPinMouseMove = function (evt) {
+    evt.preventDefault();
+    var mouseX = evt.clientX;
+    var mouseY = evt.clientY;
+
+    var onMouseMove = function (evtMove) {
+      evtMove.preventDefault();
+      var shiftX = mouseX - evtMove.clientX;
+      var shiftY = mouseY - evtMove.clientY;
+
+      mouseX = evtMove.clientX;
+      mouseY = evtMove.clientY;
+
+      mapPinMain.style.top = getPositionPin(getAdressPositionPinMain().y, 130, 630, shiftY, heightMapMain + 16) + 'px';
+      mapPinMain.style.left = getPositionPin(getAdressPositionPinMain().x, 0, window.util.mapPins.clientWidth, shiftX, Math.round(widthMapMain / 2)) + 'px';
+
+      setAddressOnPinMainMove();
+    };
+
+    var onMouseUp = function (evtUp) {
+      evtUp.preventDefault();
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  };
+
+  setAddressPinMain();
   setDisabledForm();
   addListenerActMapMain();
+  mapPinMain.addEventListener('mousedown', onMainPinMouseMove);
 })();
