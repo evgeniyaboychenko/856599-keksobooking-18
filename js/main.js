@@ -46,6 +46,7 @@
       y: yPinMain
     };
   };
+
   // установить начальные координат Main метки с концом
   var setAddressPinMain = function () {
     addressField.setAttribute('value', (getAdressPositionPinMain().x + Math.round(widthMapMain / 2)) + ', ' + (getAdressPositionPinMain().y + Math.round(heightMapMain / 2)));
@@ -68,10 +69,34 @@
   var onActiveForm = function (evt) {
     window.util.windowMap.classList.remove('map--faded');
     window.util.formAd.classList.remove('ad-form--disabled');
-    window.util.mapPins.appendChild(window.map.addAds());
+    window.backend.load(onAddPin, onError);
+    // window.util.mapPins.appendChild(window.map.addAds());
     setAddressOnPinMainMove();
     removeDisabledForm();
     removeListenerActMapMain(evt);
+  };
+
+  var onAddPin = function (data) {
+    window.util.mapPins.appendChild(window.map.addAds(data));
+  };
+
+  // окно с ошибкой
+  var onError = function (message) {
+    var templateError = document.querySelector('#error').content;
+    var cloneErrorPopup = templateError.cloneNode(true);
+    var p = cloneErrorPopup.querySelector('p');
+    p.textContent = message;
+    document.querySelector('main').appendChild(cloneErrorPopup);
+    var popupError = document.querySelector('.error');
+
+    popupError.addEventListener('click', function (evt) {
+      var buttonCloseClickPopup = evt.target.closest('.error__button');
+      if (!buttonCloseClickPopup) {
+        return;
+      }
+      popupError.remove();
+      window.backend.load(onAddPin, onError);
+    });
   };
 
   // удалить обработчики события

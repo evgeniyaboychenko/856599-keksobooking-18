@@ -1,11 +1,12 @@
 'use strict';
 (function () {
-  var adsData = window.data.createAdsData();
+  var adsData;
 
   // добавление меток в фрагмент
-  var addAds = function () {
+  var addAds = function (dataLoad) {
+    adsData = dataLoad;
     var fragment = document.createDocumentFragment();
-    for (var i = 0; i < window.util.numberOffer; i++) {
+    for (var i = 0; i < dataLoad.length; i++) {
       fragment.appendChild(window.pin.createAd(adsData[i]));
     }
     return fragment;
