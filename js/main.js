@@ -8,6 +8,8 @@
   var filterForm = document.querySelector('.map__filters');
   var filterFormFieldsetList = filterForm.querySelectorAll('fieldset');
   var filterFormSelectList = filterForm.querySelectorAll('select');
+  var mapPinMainLeft = mapPinMain.style.left;
+  var mapPinMainTop = mapPinMain.style.top;
 
   // добавление атрибута 'disabled'
   var setDisabledAttribute = function (field) {
@@ -49,6 +51,7 @@
 
   // установить начальные координат Main метки с концом
   var setAddressPinMain = function () {
+
     addressField.setAttribute('value', (getAdressPositionPinMain().x + Math.round(widthMapMain / 2)) + ', ' + (getAdressPositionPinMain().y + Math.round(heightMapMain / 2)));
   };
 
@@ -151,8 +154,108 @@
     document.addEventListener('mouseup', onMouseUp);
   };
 
+
+  // ----------------сброс формы и меток
+  var resetPinCard = function () {
+    var pinCard = window.util.windowMap.querySelector('.map__card');
+    if (pinCard) {
+      pinCard.remove();
+    }
+  };
+
+  var resetPinMap = function () {
+    var pins = window.util.mapPins.querySelectorAll('.map__pin');
+    for (var i = 0; i < pins.length; i++) {
+      if (!pins[i].classList.contains('map__pin--main')) {
+        pins[i].remove();
+      }
+    }
+  };
+
+  var resetMapForm = function () {
+    resetPinMap();
+    resetPinCard();
+    mapPinMain.style.left = mapPinMainLeft;
+    mapPinMain.style.top = mapPinMainTop;
+    setAddressPinMain();
+    setDisabledForm();
+    addListenerActMapMain();
+    mapPinMain.addEventListener('mousedown', onMainPinMouseMove);
+    window.util.windowMap.classList.add('map--faded');
+    window.util.formAd.classList.add('ad-form--disabled');
+  };
+  // ----------------------------------------------------
+
   setAddressPinMain();
   setDisabledForm();
   addListenerActMapMain();
   mapPinMain.addEventListener('mousedown', onMainPinMouseMove);
+
+  // //////////////////////////////////
+  // --- отправка формы-------------
+
+  var onSuccessSave = function () {
+    var templateSuccess = document.querySelector('#success').content;
+    var cloneSuccessPopup = templateSuccess.cloneNode(true);
+    document.querySelector('main').appendChild(cloneSuccessPopup);
+
+    var popupSuccess = document.querySelector('.success');
+
+    var onClosePopupClick = function () {
+      popupSuccess.remove();
+      popupSuccess.removeEventListener('click', onClosePopupClick);
+      document.removeEventListener('keydown', onClosePopupEsc);
+    };
+
+    var onClosePopupEsc = function (evt) {
+      if (evt.keyCode === window.util.escKey) {
+        onClosePopupClick();
+      }
+    };
+
+    popupSuccess.addEventListener('click', onClosePopupClick);
+    document.addEventListener('keydown', onClosePopupEsc);
+
+    resetMapForm();
+    window.util.formAd.reset();
+    filterForm.reset();
+  };
+
+  // окно с ошибкой
+  var onErrorSave = function () {
+    var templateError = document.querySelector('#error').content;
+    var cloneErrorPopup = templateError.cloneNode(true);
+    // var p = cloneErrorPopup.querySelector('p');
+    // p.textContent = message;
+    document.querySelector('main').appendChild(cloneErrorPopup);
+    var popupError = document.querySelector('.error');
+
+    var onPopupErrorEscPress = function (evt) {
+      if (evt.keyCode === window.util.escKey) {
+        popupError.remove();
+        document.removeEventListener('keydown', onPopupErrorEscPress);
+      }
+    };
+
+    document.addEventListener('keydown', onPopupErrorEscPress);
+
+    popupError.addEventListener('click', function (evt) {
+      var buttonCloseClickPopup = evt.target.closest('.error__button');
+      if (!buttonCloseClickPopup) {
+        popupError.remove();
+        document.removeEventListener('keydown', onPopupErrorEscPress);
+      } else {
+        popupError.remove();
+        document.removeEventListener('keydown', onPopupErrorEscPress);
+        window.backend.save(new FormData(window.util.formAd), onSuccessSave, onErrorSave);
+      }
+    });
+
+  };
+
+  window.util.formAd.addEventListener('submit', function (evt) {
+    evt.preventDefault();
+    window.backend.save(new FormData(window.util.formAd), onSuccessSave, onErrorSave);
+  });
+
 })();

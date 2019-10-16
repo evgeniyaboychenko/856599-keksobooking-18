@@ -50,7 +50,7 @@
   };
 
   var save = function (data, onLoad, onError) {
-    var url = ' ';
+    var url = 'https://js.dump.academy/keksobooking';
     sendRequest(url, 'POST', onLoad, onError, data);
   };
 

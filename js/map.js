@@ -39,7 +39,9 @@
   // удалить карточку
   var removeCard = function () {
     var popupCard = window.util.windowMap.querySelector('.popup');
-    popupCard.remove();
+    if (popupCard) {
+      popupCard.remove();
+    }
     flagShowCard = false;
   };
 
