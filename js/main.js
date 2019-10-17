@@ -5,9 +5,9 @@
   var heightMapMain = mapPinMain.clientHeight;
   var addressField = window.util.formAd.querySelector('input[name="address"]');
   var adFormFieldsetList = window.util.formAd.querySelectorAll('fieldset');
-  var filterForm = document.querySelector('.map__filters');
-  var filterFormFieldsetList = filterForm.querySelectorAll('fieldset');
-  var filterFormSelectList = filterForm.querySelectorAll('select');
+  // var filterForm = document.querySelector('.map__filters');
+  var filterFormFieldsetList = window.util.filterForm.querySelectorAll('fieldset');
+  var filterFormSelectList = window.util.filterForm.querySelectorAll('select');
   var mapPinMainLeft = mapPinMain.style.left;
   var mapPinMainTop = mapPinMain.style.top;
 
@@ -79,10 +79,35 @@
     removeListenerActMapMain(evt);
   };
 
+  var adsLoad = [];
   var onAddPin = function (data) {
-    window.util.mapPins.appendChild(window.map.addAds(data));
+    adsLoad = data;
+    resetPinMap();
+    window.map.removeCard();
+    window.util.mapPins.appendChild(window.map.addAds(adsLoad));
   };
 
+  // ////////////фильтрация пинов//////////////////////
+
+  var getSelectValue = function (nameSelect) {
+    return window.util.filterForm.querySelector(nameSelect).value;
+  };
+
+  window.util.filterForm.querySelector('select[name="housing-type"]').addEventListener('change', function () {
+    onAddPin(updateAds(adsLoad));
+  });
+
+  var updateAds = function (ads) {
+    var sortAds = ads.filter(function (ad) {
+      return ad.offer.type === getSelectValue('select[name="housing-type"]');
+    });
+    sortAds = sortAds.concat(ads);
+    return sortAds.filter(function (item, i) {
+      return sortAds.indexOf(item) === i;
+    });
+  };
+
+  // ///////////////////////////////////
   // окно с ошибкой
   var onError = function (message) {
     var templateError = document.querySelector('#error').content;
@@ -155,13 +180,7 @@
   };
 
 
-  // ----------------сброс формы и меток
-  var resetPinCard = function () {
-    var pinCard = window.util.windowMap.querySelector('.map__card');
-    if (pinCard) {
-      pinCard.remove();
-    }
-  };
+  // ----------------сброс формы и меток------------------------
 
   var resetPinMap = function () {
     var pins = window.util.mapPins.querySelectorAll('.map__pin');
@@ -174,7 +193,7 @@
 
   var resetMapForm = function () {
     resetPinMap();
-    resetPinCard();
+    window.map.removeCard();
     mapPinMain.style.left = mapPinMainLeft;
     mapPinMain.style.top = mapPinMainTop;
     setAddressPinMain();
@@ -218,7 +237,7 @@
 
     resetMapForm();
     window.util.formAd.reset();
-    filterForm.reset();
+    window.util.filterForm.reset();
   };
 
   // окно с ошибкой
@@ -242,13 +261,10 @@
     popupError.addEventListener('click', function (evt) {
       var buttonCloseClickPopup = evt.target.closest('.error__button');
       if (!buttonCloseClickPopup) {
-        popupError.remove();
-        document.removeEventListener('keydown', onPopupErrorEscPress);
-      } else {
-        popupError.remove();
-        document.removeEventListener('keydown', onPopupErrorEscPress);
-        window.backend.save(new FormData(window.util.formAd), onSuccessSave, onErrorSave);
+        return;
       }
+      popupError.remove();
+      document.removeEventListener('keydown', onPopupErrorEscPress);
     });
 
   };
