@@ -2,11 +2,13 @@
 (function () {
   var adsData;
 
+
   // добавление меток в фрагмент
   var addAds = function (dataLoad) {
     adsData = dataLoad;
+    var numberAds = adsData.length > 5 ? 5 : adsData.length;
     var fragment = document.createDocumentFragment();
-    for (var i = 0; i < dataLoad.length; i++) {
+    for (var i = 0; i < numberAds; i++) {
       fragment.appendChild(window.pin.createAd(adsData[i]));
     }
     return fragment;
@@ -33,14 +35,15 @@
   // при закрытии формы удалить карточку и удалить обработчик при Esc
   var onClosePopupPressClick = function () {
     removeCard();
-    document.removeEventListener('keydown', onClosePopupPressEscKey);
+    // document.removeEventListener('keydown', onClosePopupPressEscKey);
   };
 
   // удалить карточку
   var removeCard = function () {
-    var popupCard = window.util.windowMap.querySelector('.popup');
+    var popupCard = window.util.windowMap.querySelector('.map__card');
     if (popupCard) {
       popupCard.remove();
+      document.removeEventListener('keydown', onClosePopupPressEscKey);
     }
     flagShowCard = false;
   };
@@ -61,7 +64,7 @@
         flagShowCard = true;
       }
     }
-    var popupCard = window.util.windowMap.querySelector('.popup');
+    var popupCard = window.util.windowMap.querySelector('.map__card');
     var buttonClosePopup = popupCard.querySelector('.popup__close');
     buttonClosePopup.addEventListener('click', onClosePopupPressClick);
     document.addEventListener('keydown', onClosePopupPressEscKey);
@@ -75,6 +78,7 @@
   addListenerAddCardPressPin();
 
   window.map = {
-    addAds: addAds
+    addAds: addAds,
+    removeCard: removeCard
   };
 })();
