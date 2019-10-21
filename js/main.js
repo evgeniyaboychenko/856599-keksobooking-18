@@ -70,9 +70,9 @@
 
   // активация формы
   var onActiveForm = function (evt) {
+    window.backend.load(onAddPin, onError);
     window.util.windowMap.classList.remove('map--faded');
     window.util.formAd.classList.remove('ad-form--disabled');
-    window.backend.load(onAddPin, onError);
     // window.util.mapPins.appendChild(window.map.addAds());
     setAddressOnPinMainMove();
     removeDisabledForm();
@@ -85,25 +85,86 @@
     resetPinMap();
     window.map.removeCard();
     window.util.mapPins.appendChild(window.map.addAds(adsLoad));
+
   };
 
   // ////////////фильтрация пинов//////////////////////
+  var formFiltersSelect = window.util.filterForm.querySelectorAll('select');
+  var formFiltersInput = window.util.filterForm.querySelectorAll('input');
 
-  var getSelectValue = function (nameSelect) {
-    return window.util.filterForm.querySelector(nameSelect).value;
+  // получить массив выбранных фильтров
+  var getValueFilters = function () {
+    var filters = [];
+    formFiltersSelect.forEach(function (select) {
+      filters.push(select.value);
+    });
+
+    formFiltersInput.forEach(function (input) {
+      if (input.checked) {
+      filters.push(input.value);
+      }
+    });
+    return filters;
   };
 
-  window.util.filterForm.querySelector('select[name="housing-type"]').addEventListener('change', function () {
-    onAddPin(updateAds(adsLoad));
+  var onFilterChange = window.debounce(function () {
+    onAddPin(updateAds(adsLoad, getValueFilters()));
   });
 
-  var updateAds = function (ads) {
-    var sortAds = ads.filter(function (ad) {
-      return ad.offer.type === getSelectValue('select[name="housing-type"]');
+  formFiltersSelect.forEach(function (select) {
+    select.addEventListener('change', onFilterChange);
+  });
+
+  formFiltersInput.forEach(function (input) {
+    input.addEventListener('change', onFilterChange);
+  });
+
+  var getPriceCategory = function (price) {
+    var category;
+    if (price < 10000) {category = 'low';}
+    else if (price > 50000) {category = 'high';}
+    else {category = 'middle';}
+    return category;
+  };
+
+  var getRank = function (ad, filters) {
+    var rank = 0;
+      if (filters[0] === ad.offer.type) {
+        rank ++;
+      }
+      if (filters[1] === getPriceCategory(ad.offer.price)) {
+        rank ++;
+      }
+      if (parseInt(filters[2], 10) === ad.offer.rooms) {
+        rank ++;
+      }
+      if (parseInt(filters[3], 10) === ad.offer.guests) {
+        rank ++;
+      }
+      for (var i = 0; i < filters.length; i++) {
+        ad.offer.features.forEach(function(feature) {
+          if (filters[i + 4] === feature) {
+            rank++;
+          }
+        });
+      }
+    return rank;
+  };
+
+  var priceComparator = function (left, right) {
+    return left - right;
+  };
+
+  var updateAds = function (ads, filters) {
+    ads.forEach(function (ad) {
+      ad.rank = getRank(ad, filters);
     });
-    sortAds = sortAds.concat(ads);
-    return sortAds.filter(function (item, i) {
-      return sortAds.indexOf(item) === i;
+    return ads.slice().sort(function (first, second) {
+      var rankDiff = second.rank - first.rank;
+        if (rankDiff === 0) {
+          rankDiff = priceComparator(first.offer.price, second.offer.price);
+        }
+      return rankDiff;
     });
   };
 
