@@ -101,7 +101,7 @@
 
     formFiltersInput.forEach(function (input) {
       if (input.checked) {
-      filters.push(input.value);
+        filters.push(input.value);
       }
     });
     return filters;
@@ -121,33 +121,37 @@
 
   var getPriceCategory = function (price) {
     var category;
-    if (price < 10000) {category = 'low';}
-    else if (price > 50000) {category = 'high';}
-    else {category = 'middle';}
+    if (price < 10000) {
+      category = 'low';
+    } else if (price > 50000) {
+      category = 'high';
+    } else {
+      category = 'middle';
+    }
     return category;
   };
 
   var getRank = function (ad, filters) {
     var rank = 0;
-      if (filters[0] === ad.offer.type) {
-        rank ++;
-      }
-      if (filters[1] === getPriceCategory(ad.offer.price)) {
-        rank ++;
-      }
-      if (parseInt(filters[2], 10) === ad.offer.rooms) {
-        rank ++;
-      }
-      if (parseInt(filters[3], 10) === ad.offer.guests) {
-        rank ++;
-      }
-      for (var i = 0; i < filters.length; i++) {
-        ad.offer.features.forEach(function(feature) {
-          if (filters[i + 4] === feature) {
-            rank++;
-          }
-        });
-      }
+    if (filters[0] === ad.offer.type) {
+      rank++;
+    }
+    if (filters[1] === getPriceCategory(ad.offer.price)) {
+      rank++;
+    }
+    if (parseInt(filters[2], 10) === ad.offer.rooms) {
+      rank++;
+    }
+    if (parseInt(filters[3], 10) === ad.offer.guests) {
+      rank++;
+    }
+    for (var i = 0; i < filters.length; i++) {
+      ad.offer.features.forEach(function (feature) {
+        if (filters[i + 4] === feature) {
+          rank++;
+        }
+      });
+    }
     return rank;
   };
 
@@ -161,9 +165,9 @@
     });
     return ads.slice().sort(function (first, second) {
       var rankDiff = second.rank - first.rank;
-        if (rankDiff === 0) {
-          rankDiff = priceComparator(first.offer.price, second.offer.price);
-        }
+      if (rankDiff === 0) {
+        rankDiff = priceComparator(first.offer.price, second.offer.price);
+      }
       return rankDiff;
     });
   };
