@@ -51,7 +51,6 @@
 
   // установить начальные координат Main метки с концом
   var setAddressPinMain = function () {
-
     addressField.setAttribute('value', (getAdressPositionPinMain().x + Math.round(widthMapMain / 2)) + ', ' + (getAdressPositionPinMain().y + Math.round(heightMapMain / 2)));
   };
 
@@ -64,28 +63,39 @@
   // активация формы при нажатии Enter на главную метку
   var onActiveFormPressEnter = function (evt) {
     if (evt.keyCode === window.util.enterKey) {
-      onActiveForm(evt);
+      // onActiveForm(evt);
+      onActiveForm();
     }
   };
 
   // активация формы
-  var onActiveForm = function (evt) {
+  var onActiveForm = function () {
     window.backend.load(onAddPin, onError);
-    window.util.windowMap.classList.remove('map--faded');
-    window.util.formAd.classList.remove('ad-form--disabled');
-    // window.util.mapPins.appendChild(window.map.addAds());
-    setAddressOnPinMainMove();
-    removeDisabledForm();
-    removeListenerActMapMain(evt);
+    // window.util.windowMap.classList.remove('map--faded');
+    // window.util.formAd.classList.remove('ad-form--disabled');
+    // setAddressOnPinMainMove();
+    // removeDisabledForm();
+    removeListenerActMapMain();
   };
 
   var adsLoad = [];
   var onAddPin = function (data) {
     adsLoad = data;
+    showPin(adsLoad);
+    // resetPinMap();
+    // window.map.removeCard();
+    // window.util.mapPins.appendChild(window.map.addAds(updateAds(adsLoad,getValueFilters())));
+
+    window.util.windowMap.classList.remove('map--faded');
+    window.util.formAd.classList.remove('ad-form--disabled');
+    setAddressOnPinMainMove();
+    removeDisabledForm();
+  };
+
+  var showPin = function (data) {
     resetPinMap();
     window.map.removeCard();
-    window.util.mapPins.appendChild(window.map.addAds(adsLoad));
-
+    window.util.mapPins.appendChild(window.map.addAds(updateAds(data, getValueFilters())));
   };
 
   // ////////////фильтрация пинов//////////////////////
@@ -108,7 +118,9 @@
   };
 
   var onFilterChange = window.debounce(function () {
-    onAddPin(updateAds(adsLoad, getValueFilters()));
+    // onAddPin(updateAds(adsLoad, getValueFilters()));
+    // onAddPin(adsLoad);
+    showPin(adsLoad);
   });
 
   formFiltersSelect.forEach(function (select) {
@@ -160,15 +172,20 @@
   };
 
   var updateAds = function (ads, filters) {
-    ads.forEach(function (ad) {
-      ad.rank = getRank(ad, filters);
+    var rankedAds = ads.map(function (ad) {
+      return {
+        ad: ad,
+        rank: getRank(ad, filters)
+      };
     });
-    return ads.slice().sort(function (first, second) {
+    return rankedAds.sort(function (first, second) {
       var rankDiff = second.rank - first.rank;
       if (rankDiff === 0) {
-        rankDiff = priceComparator(first.offer.price, second.offer.price);
+        rankDiff = priceComparator(first.ad.offer.price, second.ad.offer.price);
       }
       return rankDiff;
+    }).map(function (rankedAd) {
+      return rankedAd.ad;
     });
   };
 
@@ -217,6 +234,7 @@
 
   var onMainPinMouseMove = function (evt) {
     evt.preventDefault();
+    window.map.removeCard();
     var mouseX = evt.clientX;
     var mouseY = evt.clientY;
 
@@ -302,6 +320,7 @@
 
     resetMapForm();
     window.util.formAd.reset();
+    window.form.resetFiledPrice();
     window.util.filterForm.reset();
   };
 
@@ -331,7 +350,6 @@
       popupError.remove();
       document.removeEventListener('keydown', onPopupErrorEscPress);
     });
-
   };
 
   window.util.formAd.addEventListener('submit', function (evt) {
@@ -339,4 +357,15 @@
     window.backend.save(new FormData(window.util.formAd), onSuccessSave, onErrorSave);
   });
 
+  document.querySelector('.ad-form__reset').addEventListener('click', function () {
+    mapPinMain.style.left = mapPinMainLeft;
+    mapPinMain.style.top = mapPinMainTop;
+    setAddressOnPinMainMove();
+    window.util.formAd.reset();
+    window.form.resetFiledPrice();
+    window.util.filterForm.reset();
+    // onAddPin(updateAds(adsLoad, getValueFilters()));
+    // onAddPin(adsLoad);
+    showPin(adsLoad);
+  });
 })();

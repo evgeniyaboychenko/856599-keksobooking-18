@@ -9,7 +9,9 @@
     var numberAds = adsData.length > 5 ? 5 : adsData.length;
     var fragment = document.createDocumentFragment();
     for (var i = 0; i < numberAds; i++) {
-      fragment.appendChild(window.pin.createAd(adsData[i]));
+      if (adsData[i].offer) {
+        fragment.appendChild(window.pin.createAd(adsData[i]));
+      }
     }
     return fragment;
   };
@@ -41,6 +43,12 @@
   // удалить карточку
   var removeCard = function () {
     var popupCard = window.util.windowMap.querySelector('.map__card');
+    var mapPinActive = window.util.mapPins.querySelector('.map__pin--active');
+
+    if (mapPinActive) {
+      mapPinActive.classList.remove('map__pin--active');
+    }
+
     if (popupCard) {
       popupCard.remove();
       document.removeEventListener('keydown', onClosePopupPressEscKey);
@@ -60,10 +68,13 @@
     var pins = window.util.mapPins.children;
     for (var i = 0; i < pins.length; i++) {
       if (pins[i] === pinClickMap) {
+        pinClickMap.classList.add('map__pin--active');
         mapFiltersContainer.before(addCardMap(i - 2));
         flagShowCard = true;
       }
     }
+
+
     var popupCard = window.util.windowMap.querySelector('.map__card');
     var buttonClosePopup = popupCard.querySelector('.popup__close');
     buttonClosePopup.addEventListener('click', onClosePopupPressClick);
