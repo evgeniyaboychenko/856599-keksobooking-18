@@ -57,7 +57,7 @@
   };
 
   // создать карточку объявления при нажатии на метку
-  var onAddCardClickPin = function (evt) {
+  var onPinClick = function (evt) {
     var pinClickMap = evt.target.closest('button[type="button"]');
     if (!pinClickMap) {
       return;
@@ -83,7 +83,7 @@
 
   // добавить обраточкик события для показа карточки объявления при click на метку
   var addListenerAddCardPressPin = function () {
-    window.util.mapPins.addEventListener('click', onAddCardClickPin);
+    window.util.mapPins.addEventListener('click', onPinClick);
   };
 
   addListenerAddCardPressPin();

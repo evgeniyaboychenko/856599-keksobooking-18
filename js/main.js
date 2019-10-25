@@ -71,20 +71,32 @@
   // активация формы
   var onActiveForm = function () {
     window.backend.load(onAddPin, onError);
-    // window.util.windowMap.classList.remove('map--faded');
-    // window.util.formAd.classList.remove('ad-form--disabled');
-    // setAddressOnPinMainMove();
-    // removeDisabledForm();
     removeListenerActMapMain();
   };
+  var isPinMainMouseDownSubscribed = true;
+  var subscribeMainPinMouseDown = function () {
+    if (!isPinMainMouseDownSubscribed) {
+      isPinMainMouseDownSubscribed = true;
+      mapPinMain.addEventListener('mousedown', onMainPinMouseMove);
+    }
+  };
+
+  var unsubscribeMainPinMouseDown = function () {
+    if (isPinMainMouseDownSubscribed) {
+      isPinMainMouseDownSubscribed = false;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      mapPinMain.removeEventListener('mousedown', onMainPinMouseMove);
+    }
+  };
+
 
   var adsLoad = [];
   var onAddPin = function (data) {
+    subscribeMainPinMouseDown();
+
     adsLoad = data;
     showPin(adsLoad);
-    // resetPinMap();
-    // window.map.removeCard();
-    // window.util.mapPins.appendChild(window.map.addAds(updateAds(adsLoad,getValueFilters())));
 
     window.util.windowMap.classList.remove('map--faded');
     window.util.formAd.classList.remove('ad-form--disabled');
@@ -95,32 +107,58 @@
   var showPin = function (data) {
     resetPinMap();
     window.map.removeCard();
-    window.util.mapPins.appendChild(window.map.addAds(updateAds(data, getValueFilters())));
+    window.util.mapPins.appendChild(window.map.addAds(data));
+  // window.util.mapPins.appendChild(window.map.addAds(updateAds(data, getValueFilters())));
   };
 
   // ////////////фильтрация пинов//////////////////////
   var formFiltersSelect = window.util.filterForm.querySelectorAll('select');
   var formFiltersInput = window.util.filterForm.querySelectorAll('input');
 
-  // получить массив выбранных фильтров
-  var getValueFilters = function () {
-    var filters = [];
-    formFiltersSelect.forEach(function (select) {
-      filters.push(select.value);
-    });
+  var selectTypeHouse = window.util.filterForm.querySelector('select[name="housing-type"]');
+  var selectPrice = window.util.filterForm.querySelector('select[name="housing-price"]');
+  var selectValueRooms = window.util.filterForm.querySelector('select[name="housing-rooms"]');
+  var selectValueGuests = window.util.filterForm.querySelector('select[name="housing-guests"]');
+
+
+  var filterAds = function (data) {
+    var filtredAds = data;
+
+    if (selectTypeHouse.value !== 'any') {
+      filtredAds = filtredAds.filter(function (ad) {
+        return selectTypeHouse.value === ad.offer.type;
+      });
+    }
+    if (selectPrice.value !== 'any') {
+      filtredAds = filtredAds.filter(function (ad) {
+        return selectPrice.value === getPriceCategory(ad.offer.price);
+      });
+    }
+    if (selectValueRooms.value !== 'any') {
+      filtredAds = filtredAds.filter(function (ad) {
+        return parseInt(selectValueRooms.value, 10) === ad.offer.rooms;
+      });
+    }
+    if (selectValueGuests.value !== 'any') {
+      filtredAds = filtredAds.filter(function (ad) {
+        return parseInt(selectValueGuests.value, 10) === ad.offer.guests;
+      });
+    }
 
     formFiltersInput.forEach(function (input) {
       if (input.checked) {
-        filters.push(input.value);
+        filtredAds = filtredAds.filter(function (ad) {
+          return ad.offer.features.some(function (feature) {
+            return feature === input.value;
+          });
+        });
       }
     });
-    return filters;
+    return filtredAds;
   };
 
   var onFilterChange = window.debounce(function () {
-    // onAddPin(updateAds(adsLoad, getValueFilters()));
-    // onAddPin(adsLoad);
-    showPin(adsLoad);
+    showPin(filterAds(adsLoad));
   });
 
   formFiltersSelect.forEach(function (select) {
@@ -143,55 +181,12 @@
     return category;
   };
 
-  var getRank = function (ad, filters) {
-    var rank = 0;
-    if (filters[0] === ad.offer.type) {
-      rank++;
-    }
-    if (filters[1] === getPriceCategory(ad.offer.price)) {
-      rank++;
-    }
-    if (parseInt(filters[2], 10) === ad.offer.rooms) {
-      rank++;
-    }
-    if (parseInt(filters[3], 10) === ad.offer.guests) {
-      rank++;
-    }
-    for (var i = 0; i < filters.length; i++) {
-      ad.offer.features.forEach(function (feature) {
-        if (filters[i + 4] === feature) {
-          rank++;
-        }
-      });
-    }
-    return rank;
-  };
-
-  var priceComparator = function (left, right) {
-    return left - right;
-  };
-
-  var updateAds = function (ads, filters) {
-    var rankedAds = ads.map(function (ad) {
-      return {
-        ad: ad,
-        rank: getRank(ad, filters)
-      };
-    });
-    return rankedAds.sort(function (first, second) {
-      var rankDiff = second.rank - first.rank;
-      if (rankDiff === 0) {
-        rankDiff = priceComparator(first.ad.offer.price, second.ad.offer.price);
-      }
-      return rankDiff;
-    }).map(function (rankedAd) {
-      return rankedAd.ad;
-    });
-  };
 
   // ///////////////////////////////////
   // окно с ошибкой
   var onError = function (message) {
+    unsubscribeMainPinMouseDown();
+
     var templateError = document.querySelector('#error').content;
     var cloneErrorPopup = templateError.cloneNode(true);
     var p = cloneErrorPopup.querySelector('p');
@@ -232,31 +227,34 @@
     }
   };
 
+  var mouseX;
+  var mouseY;
+
+  var onMouseMove = function (evtMove) {
+    evtMove.preventDefault();
+    var shiftX = mouseX - evtMove.clientX;
+    var shiftY = mouseY - evtMove.clientY;
+
+    mouseX = evtMove.clientX;
+    mouseY = evtMove.clientY;
+
+    mapPinMain.style.top = getPositionPin(getAdressPositionPinMain().y, 130, 630, shiftY, heightMapMain + 16) + 'px';
+    mapPinMain.style.left = getPositionPin(getAdressPositionPinMain().x, 0, window.util.mapPins.clientWidth, shiftX, Math.round(widthMapMain / 2)) + 'px';
+
+    setAddressOnPinMainMove();
+  };
+
+  var onMouseUp = function (evtUp) {
+    evtUp.preventDefault();
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  };
   var onMainPinMouseMove = function (evt) {
     evt.preventDefault();
     window.map.removeCard();
-    var mouseX = evt.clientX;
-    var mouseY = evt.clientY;
 
-    var onMouseMove = function (evtMove) {
-      evtMove.preventDefault();
-      var shiftX = mouseX - evtMove.clientX;
-      var shiftY = mouseY - evtMove.clientY;
-
-      mouseX = evtMove.clientX;
-      mouseY = evtMove.clientY;
-
-      mapPinMain.style.top = getPositionPin(getAdressPositionPinMain().y, 130, 630, shiftY, heightMapMain + 16) + 'px';
-      mapPinMain.style.left = getPositionPin(getAdressPositionPinMain().x, 0, window.util.mapPins.clientWidth, shiftX, Math.round(widthMapMain / 2)) + 'px';
-
-      setAddressOnPinMainMove();
-    };
-
-    var onMouseUp = function (evtUp) {
-      evtUp.preventDefault();
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-    };
+    mouseX = evt.clientX;
+    mouseY = evt.clientY;
 
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
@@ -282,7 +280,7 @@
     setAddressPinMain();
     setDisabledForm();
     addListenerActMapMain();
-    mapPinMain.addEventListener('mousedown', onMainPinMouseMove);
+    subscribeMainPinMouseDown();
     window.util.windowMap.classList.add('map--faded');
     window.util.formAd.classList.add('ad-form--disabled');
   };
@@ -322,6 +320,7 @@
     window.util.formAd.reset();
     window.form.resetFiledPrice();
     window.util.filterForm.reset();
+    window.photo.resetPreviewPhoto();
   };
 
   // окно с ошибкой
@@ -364,8 +363,7 @@
     window.util.formAd.reset();
     window.form.resetFiledPrice();
     window.util.filterForm.reset();
-    // onAddPin(updateAds(adsLoad, getValueFilters()));
-    // onAddPin(adsLoad);
+    window.photo.resetPreviewPhoto();
     showPin(adsLoad);
   });
 })();
