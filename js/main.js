@@ -51,7 +51,6 @@
 
   // установить начальные координат Main метки с концом
   var setAddressPinMain = function () {
-
     addressField.setAttribute('value', (getAdressPositionPinMain().x + Math.round(widthMapMain / 2)) + ', ' + (getAdressPositionPinMain().y + Math.round(heightMapMain / 2)));
   };
 
@@ -64,52 +63,130 @@
   // активация формы при нажатии Enter на главную метку
   var onActiveFormPressEnter = function (evt) {
     if (evt.keyCode === window.util.enterKey) {
-      onActiveForm(evt);
+      // onActiveForm(evt);
+      onActiveForm();
     }
   };
 
   // активация формы
-  var onActiveForm = function (evt) {
-    window.util.windowMap.classList.remove('map--faded');
-    window.util.formAd.classList.remove('ad-form--disabled');
+  var onActiveForm = function () {
     window.backend.load(onAddPin, onError);
-    // window.util.mapPins.appendChild(window.map.addAds());
-    setAddressOnPinMainMove();
-    removeDisabledForm();
-    removeListenerActMapMain(evt);
+    removeListenerActMapMain();
   };
+  var isPinMainMouseDownSubscribed = true;
+  var subscribeMainPinMouseDown = function () {
+    if (!isPinMainMouseDownSubscribed) {
+      isPinMainMouseDownSubscribed = true;
+      mapPinMain.addEventListener('mousedown', onMainPinMouseMove);
+    }
+  };
+
+  var unsubscribeMainPinMouseDown = function () {
+    if (isPinMainMouseDownSubscribed) {
+      isPinMainMouseDownSubscribed = false;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      mapPinMain.removeEventListener('mousedown', onMainPinMouseMove);
+    }
+  };
+
 
   var adsLoad = [];
   var onAddPin = function (data) {
+    subscribeMainPinMouseDown();
+
     adsLoad = data;
+    showPin(adsLoad);
+
+    window.util.windowMap.classList.remove('map--faded');
+    window.util.formAd.classList.remove('ad-form--disabled');
+    setAddressOnPinMainMove();
+    removeDisabledForm();
+  };
+
+  var showPin = function (data) {
     resetPinMap();
     window.map.removeCard();
-    window.util.mapPins.appendChild(window.map.addAds(adsLoad));
+    window.util.mapPins.appendChild(window.map.addAds(data));
+  // window.util.mapPins.appendChild(window.map.addAds(updateAds(data, getValueFilters())));
   };
 
   // ////////////фильтрация пинов//////////////////////
+  var formFiltersSelect = window.util.filterForm.querySelectorAll('select');
+  var formFiltersInput = window.util.filterForm.querySelectorAll('input');
 
-  var getSelectValue = function (nameSelect) {
-    return window.util.filterForm.querySelector(nameSelect).value;
+  var selectTypeHouse = window.util.filterForm.querySelector('select[name="housing-type"]');
+  var selectPrice = window.util.filterForm.querySelector('select[name="housing-price"]');
+  var selectValueRooms = window.util.filterForm.querySelector('select[name="housing-rooms"]');
+  var selectValueGuests = window.util.filterForm.querySelector('select[name="housing-guests"]');
+
+
+  var filterAds = function (data) {
+    var filtredAds = data;
+
+    if (selectTypeHouse.value !== 'any') {
+      filtredAds = filtredAds.filter(function (ad) {
+        return selectTypeHouse.value === ad.offer.type;
+      });
+    }
+    if (selectPrice.value !== 'any') {
+      filtredAds = filtredAds.filter(function (ad) {
+        return selectPrice.value === getPriceCategory(ad.offer.price);
+      });
+    }
+    if (selectValueRooms.value !== 'any') {
+      filtredAds = filtredAds.filter(function (ad) {
+        return parseInt(selectValueRooms.value, 10) === ad.offer.rooms;
+      });
+    }
+    if (selectValueGuests.value !== 'any') {
+      filtredAds = filtredAds.filter(function (ad) {
+        return parseInt(selectValueGuests.value, 10) === ad.offer.guests;
+      });
+    }
+
+    formFiltersInput.forEach(function (input) {
+      if (input.checked) {
+        filtredAds = filtredAds.filter(function (ad) {
+          return ad.offer.features.some(function (feature) {
+            return feature === input.value;
+          });
+        });
+      }
+    });
+    return filtredAds;
   };
 
-  window.util.filterForm.querySelector('select[name="housing-type"]').addEventListener('change', function () {
-    onAddPin(updateAds(adsLoad));
+  var onFilterChange = window.debounce(function () {
+    showPin(filterAds(adsLoad));
   });
 
-  var updateAds = function (ads) {
-    var sortAds = ads.filter(function (ad) {
-      return ad.offer.type === getSelectValue('select[name="housing-type"]');
-    });
-    sortAds = sortAds.concat(ads);
-    return sortAds.filter(function (item, i) {
-      return sortAds.indexOf(item) === i;
-    });
+  formFiltersSelect.forEach(function (select) {
+    select.addEventListener('change', onFilterChange);
+  });
+
+  formFiltersInput.forEach(function (input) {
+    input.addEventListener('change', onFilterChange);
+  });
+
+  var getPriceCategory = function (price) {
+    var category;
+    if (price < 10000) {
+      category = 'low';
+    } else if (price > 50000) {
+      category = 'high';
+    } else {
+      category = 'middle';
+    }
+    return category;
   };
+
 
   // ///////////////////////////////////
   // окно с ошибкой
   var onError = function (message) {
+    unsubscribeMainPinMouseDown();
+
     var templateError = document.querySelector('#error').content;
     var cloneErrorPopup = templateError.cloneNode(true);
     var p = cloneErrorPopup.querySelector('p');
@@ -150,30 +227,34 @@
     }
   };
 
+  var mouseX;
+  var mouseY;
+
+  var onMouseMove = function (evtMove) {
+    evtMove.preventDefault();
+    var shiftX = mouseX - evtMove.clientX;
+    var shiftY = mouseY - evtMove.clientY;
+
+    mouseX = evtMove.clientX;
+    mouseY = evtMove.clientY;
+
+    mapPinMain.style.top = getPositionPin(getAdressPositionPinMain().y, 130, 630, shiftY, heightMapMain + 16) + 'px';
+    mapPinMain.style.left = getPositionPin(getAdressPositionPinMain().x, 0, window.util.mapPins.clientWidth, shiftX, Math.round(widthMapMain / 2)) + 'px';
+
+    setAddressOnPinMainMove();
+  };
+
+  var onMouseUp = function (evtUp) {
+    evtUp.preventDefault();
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  };
   var onMainPinMouseMove = function (evt) {
     evt.preventDefault();
-    var mouseX = evt.clientX;
-    var mouseY = evt.clientY;
+    window.map.removeCard();
 
-    var onMouseMove = function (evtMove) {
-      evtMove.preventDefault();
-      var shiftX = mouseX - evtMove.clientX;
-      var shiftY = mouseY - evtMove.clientY;
-
-      mouseX = evtMove.clientX;
-      mouseY = evtMove.clientY;
-
-      mapPinMain.style.top = getPositionPin(getAdressPositionPinMain().y, 130, 630, shiftY, heightMapMain + 16) + 'px';
-      mapPinMain.style.left = getPositionPin(getAdressPositionPinMain().x, 0, window.util.mapPins.clientWidth, shiftX, Math.round(widthMapMain / 2)) + 'px';
-
-      setAddressOnPinMainMove();
-    };
-
-    var onMouseUp = function (evtUp) {
-      evtUp.preventDefault();
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-    };
+    mouseX = evt.clientX;
+    mouseY = evt.clientY;
 
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
@@ -199,7 +280,7 @@
     setAddressPinMain();
     setDisabledForm();
     addListenerActMapMain();
-    mapPinMain.addEventListener('mousedown', onMainPinMouseMove);
+    subscribeMainPinMouseDown();
     window.util.windowMap.classList.add('map--faded');
     window.util.formAd.classList.add('ad-form--disabled');
   };
@@ -237,7 +318,9 @@
 
     resetMapForm();
     window.util.formAd.reset();
+    window.form.resetFiledPrice();
     window.util.filterForm.reset();
+    window.photo.resetPreviewPhoto();
   };
 
   // окно с ошибкой
@@ -266,7 +349,6 @@
       popupError.remove();
       document.removeEventListener('keydown', onPopupErrorEscPress);
     });
-
   };
 
   window.util.formAd.addEventListener('submit', function (evt) {
@@ -274,4 +356,14 @@
     window.backend.save(new FormData(window.util.formAd), onSuccessSave, onErrorSave);
   });
 
+  document.querySelector('.ad-form__reset').addEventListener('click', function () {
+    mapPinMain.style.left = mapPinMainLeft;
+    mapPinMain.style.top = mapPinMainTop;
+    setAddressOnPinMainMove();
+    window.util.formAd.reset();
+    window.form.resetFiledPrice();
+    window.util.filterForm.reset();
+    window.photo.resetPreviewPhoto();
+    showPin(adsLoad);
+  });
 })();

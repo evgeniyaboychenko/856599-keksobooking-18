@@ -97,4 +97,8 @@
 
   matchFields(timeInField, timeOutField);
   matchFields(timeOutField, timeInField);
+
+  window.form = {
+    resetFiledPrice: determinateMinPriceHouse
+  };
 })();
