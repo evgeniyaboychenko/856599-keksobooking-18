@@ -1,7 +1,7 @@
 'use strict';
 (function () {
   var templateMapPin = document.querySelector('#pin').content.querySelector('.map__pin');
-  var createAd = function (ad) {
+  var getMapPin = function (ad) {
     var mapPin = templateMapPin.cloneNode(true);
     mapPin.style.left = ad.location.x + 'px';
     mapPin.style.top = ad.location.y + 'px';
@@ -12,6 +12,6 @@
   };
 
   window.pin = {
-    createAd: createAd
+    getMapPin: getMapPin
   };
 })();

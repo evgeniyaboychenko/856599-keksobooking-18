@@ -9,7 +9,7 @@
   var fileChooserPhotoHouse = document.querySelector('.ad-form__input');
   var previewPhotoHouse = document.querySelector('.ad-form__photo');
 
-  var createImg = function () {
+  var getImgPhotoHouse = function () {
     var cloneDiv = previewPhotoHouse.cloneNode(false);
     cloneDiv.classList.remove('visually-hidden');
     previewPhotoHouse.classList.add('visually-hidden');
@@ -38,7 +38,7 @@
 
         reader.addEventListener('load', function () {
           if (preview !== previewAvatar) {
-            preview = createImg();
+            preview = getImgPhotoHouse();
           }
           preview.src = reader.result;
         });

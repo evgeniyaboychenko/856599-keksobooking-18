@@ -1,12 +1,11 @@
 'use strict';
 (function () {
   // создание карточки объявления от объекта метка
-  var TYPE_HOUSES_MAP = {palace: 'Дворец', flat: 'Квартира', house: 'Дом', bungalo: 'Бунгало'};
-
+  var typeHouseMap = {PALACE: 'Дворец', flat: 'Квартира', house: 'Дом', bungalo: 'Бунгало'};
   var templateMapCard = document.querySelector('#card').content.querySelector('.map__card');
 
   var getPropertyTypeName = function (key) {
-    return TYPE_HOUSES_MAP[key];
+    return typeHouseMap[key];
   };
 
   var getEndingWordRoom = function (number) {
@@ -19,7 +18,7 @@
     return ending;
   };
 
-  var createCardAd = function (ad) {
+  var getCardAd = function (ad) {
     var mapCard = templateMapCard.cloneNode(true);
     var mapCardAvatar = mapCard.querySelector('.popup__avatar');
     var mapCardTitle = mapCard.querySelector('.popup__title');
@@ -111,6 +110,6 @@
   };
 
   window.card = {
-    createCardAd: createCardAd
+    getCardAd: getCardAd
   };
 })();

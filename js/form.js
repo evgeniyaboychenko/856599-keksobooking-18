@@ -1,9 +1,9 @@
 'use strict';
 (function () {
   // -----------------------валидация формы-------------------------
-  var MIN_PRICE_HOUSES_MAP = {palace: 10000, flat: 1000, house: 5000, bungalo: 0};
-  // валидация Заголовок объявления
+  var houseMinPriceMap = {palace: 10000, flat: 1000, house: 5000, bungalo: 0};
 
+  // валидация Заголовок объявления
   var roomField = window.util.formAd.querySelector('select[name="rooms"]');
   var guestField = window.util.formAd.querySelector('select[name="capacity"]');
 
@@ -37,13 +37,13 @@
   };
 
   var determinateMinPriceHouse = function () {
-    priceField.setAttribute('placeholder', MIN_PRICE_HOUSES_MAP[typeHouseField.value]);
-    priceField.setAttribute('min', MIN_PRICE_HOUSES_MAP[typeHouseField.value]);
+    priceField.setAttribute('placeholder', houseMinPriceMap[typeHouseField.value]);
+    priceField.setAttribute('min', houseMinPriceMap[typeHouseField.value]);
   };
 
   var checkedPriceFields = function () {
-    if (priceField.value < MIN_PRICE_HOUSES_MAP[typeHouseField.value]) {
-      priceField.setCustomValidity('Минимальная стоимость для выбранного типа жилья должна быть выше ' + MIN_PRICE_HOUSES_MAP[typeHouseField.value]);
+    if (priceField.value < houseMinPriceMap[typeHouseField.value]) {
+      priceField.setCustomValidity('Минимальная стоимость для выбранного типа жилья должна быть выше ' + houseMinPriceMap[typeHouseField.value]);
     } else {
       priceField.setCustomValidity('');
     }
@@ -69,8 +69,6 @@
     }
   };
 
-
-  // ------------------------------------------------------
   // соответствие время выезда времени въезда
   var timeInField = window.util.formAd.querySelector('select[name="timein"]');
   var timeOutField = window.util.formAd.querySelector('select[name="timeout"]');
@@ -82,9 +80,7 @@
   };
 
 
-  // ----------------------------------------------------------------------------
   checkedTitleFields();
-
   priceField.addEventListener('invalid', onPriceFieldValidation(priceField));
 
   determinateMinPriceHouse();
