@@ -2,6 +2,10 @@
 (function () {
   // -----------------------валидация формы-------------------------
   var houseMinPriceMap = {palace: 10000, flat: 1000, house: 5000, bungalo: 0};
+  var typeHouseField = window.util.formAd.querySelector('select[name="type"]');
+  var priceField = window.util.formAd.querySelector('input[name="price"]');
+  var timeInField = window.util.formAd.querySelector('select[name="timein"]');
+  var timeOutField = window.util.formAd.querySelector('select[name="timeout"]');
 
   // валидация Заголовок объявления
   var roomField = window.util.formAd.querySelector('select[name="rooms"]');
@@ -21,8 +25,6 @@
   };
 
   // стоимость по типу жилья
-  var typeHouseField = window.util.formAd.querySelector('select[name="type"]');
-  var priceField = window.util.formAd.querySelector('input[name="price"]');
 
   var onPriceFieldValidation = function (field) {
     if (field.validity.valueMissing) {
@@ -70,15 +72,11 @@
   };
 
   // соответствие время выезда времени въезда
-  var timeInField = window.util.formAd.querySelector('select[name="timein"]');
-  var timeOutField = window.util.formAd.querySelector('select[name="timeout"]');
-
   var matchFields = function (fieldFirst, fieldSecond) {
     fieldFirst.addEventListener('change', function () {
       fieldSecond.value = fieldFirst.value;
     });
   };
-
 
   checkedTitleFields();
   priceField.addEventListener('invalid', onPriceFieldValidation(priceField));

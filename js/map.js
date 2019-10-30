@@ -1,29 +1,29 @@
 'use strict';
 (function () {
   var adsData;
+  var mapFiltersContainer = document.querySelector('.map__filters-container');
+  var flagShowCard = false;
 
   // добавление меток в фрагмент
-  var getPinsFragment = function (dataLoad) {
+  var createPinsFragment = function (dataLoad) {
     adsData = dataLoad;
     var numberAds = adsData.length > 5 ? 5 : adsData.length;
     var fragment = document.createDocumentFragment();
     for (var i = 0; i < numberAds; i++) {
       if (adsData[i].offer) {
-        fragment.appendChild(window.pin.getMapPin(adsData[i]));
+        fragment.appendChild(window.pin.createMapPin(adsData[i]));
       }
     }
     return fragment;
   };
 
   // добавление карточки метки в фрагмент
-  var getCardPinFragment = function (number) {
+  var createCardPinFragment = function (number) {
     var fragment = document.createDocumentFragment();
-    fragment.appendChild(window.card.getCardAd(adsData[number]));
+    fragment.appendChild(window.card.createCardAd(adsData[number]));
     return fragment;
   };
 
-  var mapFiltersContainer = document.querySelector('.map__filters-container');
-  var flagShowCard = false;
 
   // при нажатии на ESC удалить карточку
   var onClosePopupPressEscKey = function (evt) {
@@ -66,7 +66,7 @@
     for (var i = 0; i < pins.length; i++) {
       if (pins[i] === pinClickMap) {
         pinClickMap.classList.add('map__pin--active');
-        mapFiltersContainer.before(getCardPinFragment(i - 2));
+        mapFiltersContainer.before(createCardPinFragment(i - 2));
         flagShowCard = true;
       }
     }
@@ -85,7 +85,7 @@
   addListenerAddCardPressPin();
 
   window.map = {
-    getPinsFragment: getPinsFragment,
+    createPinsFragment: createPinsFragment,
     removeCard: removeCard
   };
 })();
