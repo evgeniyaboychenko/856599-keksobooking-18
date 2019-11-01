@@ -1,31 +1,29 @@
 'use strict';
 (function () {
   var adsData;
-
+  var mapFiltersContainer = document.querySelector('.map__filters-container');
+  var flagShowCard = false;
 
   // добавление меток в фрагмент
-  var addAds = function (dataLoad) {
+  var createPinsFragment = function (dataLoad) {
     adsData = dataLoad;
     var numberAds = adsData.length > 5 ? 5 : adsData.length;
     var fragment = document.createDocumentFragment();
     for (var i = 0; i < numberAds; i++) {
       if (adsData[i].offer) {
-        fragment.appendChild(window.pin.createAd(adsData[i]));
+        fragment.appendChild(window.pin.createMapPin(adsData[i]));
       }
     }
     return fragment;
   };
 
   // добавление карточки метки в фрагмент
-  var addCardMap = function (number) {
+  var createCardPinFragment = function (number) {
     var fragment = document.createDocumentFragment();
     fragment.appendChild(window.card.createCardAd(adsData[number]));
     return fragment;
   };
 
-  // ////////////////////////////////////////////////////////////////////////////
-  var mapFiltersContainer = document.querySelector('.map__filters-container');
-  var flagShowCard = false;
 
   // при нажатии на ESC удалить карточку
   var onClosePopupPressEscKey = function (evt) {
@@ -37,7 +35,6 @@
   // при закрытии формы удалить карточку и удалить обработчик при Esc
   var onClosePopupPressClick = function () {
     removeCard();
-    // document.removeEventListener('keydown', onClosePopupPressEscKey);
   };
 
   // удалить карточку
@@ -69,11 +66,10 @@
     for (var i = 0; i < pins.length; i++) {
       if (pins[i] === pinClickMap) {
         pinClickMap.classList.add('map__pin--active');
-        mapFiltersContainer.before(addCardMap(i - 2));
+        mapFiltersContainer.before(createCardPinFragment(i - 2));
         flagShowCard = true;
       }
     }
-
 
     var popupCard = window.util.windowMap.querySelector('.map__card');
     var buttonClosePopup = popupCard.querySelector('.popup__close');
@@ -89,7 +85,7 @@
   addListenerAddCardPressPin();
 
   window.map = {
-    addAds: addAds,
+    createPinsFragment: createPinsFragment,
     removeCard: removeCard
   };
 })();

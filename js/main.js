@@ -5,11 +5,20 @@
   var heightMapMain = mapPinMain.clientHeight;
   var addressField = window.util.formAd.querySelector('input[name="address"]');
   var adFormFieldsetList = window.util.formAd.querySelectorAll('fieldset');
-  // var filterForm = document.querySelector('.map__filters');
   var filterFormFieldsetList = window.util.filterForm.querySelectorAll('fieldset');
   var filterFormSelectList = window.util.filterForm.querySelectorAll('select');
   var mapPinMainLeft = mapPinMain.style.left;
   var mapPinMainTop = mapPinMain.style.top;
+  var adsLoad = [];
+  var formFiltersSelect = window.util.filterForm.querySelectorAll('select');
+  var formFiltersInput = window.util.filterForm.querySelectorAll('input');
+  var selectTypeHouse = window.util.filterForm.querySelector('select[name="housing-type"]');
+  var selectPrice = window.util.filterForm.querySelector('select[name="housing-price"]');
+  var selectValueRooms = window.util.filterForm.querySelector('select[name="housing-rooms"]');
+  var selectValueGuests = window.util.filterForm.querySelector('select[name="housing-guests"]');
+  var mouseX;
+  var mouseY;
+  var isPinMainMouseDownSubscribed = true;
 
   // добавление атрибута 'disabled'
   var setDisabledAttribute = function (field) {
@@ -58,12 +67,10 @@
   var setAddressOnPinMainMove = function () {
     addressField.setAttribute('value', (getAdressPositionPinMain().x + Math.round(widthMapMain / 2)) + ', ' + (getAdressPositionPinMain().y + heightMapMain + 16));
   };
-  // ----------------------------------------------------------------------------
 
   // активация формы при нажатии Enter на главную метку
   var onActiveFormPressEnter = function (evt) {
     if (evt.keyCode === window.util.enterKey) {
-      // onActiveForm(evt);
       onActiveForm();
     }
   };
@@ -73,7 +80,7 @@
     window.backend.load(onAddPin, onError);
     removeListenerActMapMain();
   };
-  var isPinMainMouseDownSubscribed = true;
+
   var subscribeMainPinMouseDown = function () {
     if (!isPinMainMouseDownSubscribed) {
       isPinMainMouseDownSubscribed = true;
@@ -90,14 +97,10 @@
     }
   };
 
-
-  var adsLoad = [];
   var onAddPin = function (data) {
     subscribeMainPinMouseDown();
-
     adsLoad = data;
     showPin(adsLoad);
-
     window.util.windowMap.classList.remove('map--faded');
     window.util.formAd.classList.remove('ad-form--disabled');
     setAddressOnPinMainMove();
@@ -107,19 +110,10 @@
   var showPin = function (data) {
     resetPinMap();
     window.map.removeCard();
-    window.util.mapPins.appendChild(window.map.addAds(data));
-  // window.util.mapPins.appendChild(window.map.addAds(updateAds(data, getValueFilters())));
+    window.util.mapPins.appendChild(window.map.createPinsFragment(data));
   };
 
-  // ////////////фильтрация пинов//////////////////////
-  var formFiltersSelect = window.util.filterForm.querySelectorAll('select');
-  var formFiltersInput = window.util.filterForm.querySelectorAll('input');
-
-  var selectTypeHouse = window.util.filterForm.querySelector('select[name="housing-type"]');
-  var selectPrice = window.util.filterForm.querySelector('select[name="housing-price"]');
-  var selectValueRooms = window.util.filterForm.querySelector('select[name="housing-rooms"]');
-  var selectValueGuests = window.util.filterForm.querySelector('select[name="housing-guests"]');
-
+  // ---------------фильтрация пинов-----------------------------------
 
   var filterAds = function (data) {
     var filtredAds = data;
@@ -157,18 +151,6 @@
     return filtredAds;
   };
 
-  var onFilterChange = window.debounce(function () {
-    showPin(filterAds(adsLoad));
-  });
-
-  formFiltersSelect.forEach(function (select) {
-    select.addEventListener('change', onFilterChange);
-  });
-
-  formFiltersInput.forEach(function (input) {
-    input.addEventListener('change', onFilterChange);
-  });
-
   var getPriceCategory = function (price) {
     var category;
     if (price < 10000) {
@@ -181,8 +163,6 @@
     return category;
   };
 
-
-  // ///////////////////////////////////
   // окно с ошибкой
   var onError = function (message) {
     unsubscribeMainPinMouseDown();
@@ -227,9 +207,6 @@
     }
   };
 
-  var mouseX;
-  var mouseY;
-
   var onMouseMove = function (evtMove) {
     evtMove.preventDefault();
     var shiftX = mouseX - evtMove.clientX;
@@ -249,6 +226,7 @@
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
   };
+
   var onMainPinMouseMove = function (evt) {
     evt.preventDefault();
     window.map.removeCard();
@@ -284,14 +262,7 @@
     window.util.windowMap.classList.add('map--faded');
     window.util.formAd.classList.add('ad-form--disabled');
   };
-  // ----------------------------------------------------
 
-  setAddressPinMain();
-  setDisabledForm();
-  addListenerActMapMain();
-  mapPinMain.addEventListener('mousedown', onMainPinMouseMove);
-
-  // //////////////////////////////////
   // --- отправка формы-------------
 
   var onSuccessSave = function () {
@@ -327,8 +298,6 @@
   var onErrorSave = function () {
     var templateError = document.querySelector('#error').content;
     var cloneErrorPopup = templateError.cloneNode(true);
-    // var p = cloneErrorPopup.querySelector('p');
-    // p.textContent = message;
     document.querySelector('main').appendChild(cloneErrorPopup);
     var popupError = document.querySelector('.error');
 
@@ -350,6 +319,23 @@
       document.removeEventListener('keydown', onPopupErrorEscPress);
     });
   };
+
+  var onFilterChange = window.debounce(function () {
+    showPin(filterAds(adsLoad));
+  });
+
+  formFiltersSelect.forEach(function (select) {
+    select.addEventListener('change', onFilterChange);
+  });
+
+  formFiltersInput.forEach(function (input) {
+    input.addEventListener('change', onFilterChange);
+  });
+
+  setAddressPinMain();
+  setDisabledForm();
+  addListenerActMapMain();
+  mapPinMain.addEventListener('mousedown', onMainPinMouseMove);
 
   window.util.formAd.addEventListener('submit', function (evt) {
     evt.preventDefault();
