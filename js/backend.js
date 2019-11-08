@@ -1,5 +1,6 @@
 'use strict';
 (function () {
+  var TIMEOUT = 10000; // 10s
   var onStatusConnectionServer = function (xhr, onLoad, onError) {
     var error;
     switch (xhr.status) {
@@ -39,7 +40,7 @@
       onError('Запрос не успел выполниться за ' + xhr.timeout + 'мс');
     });
 
-    xhr.timeout = 10000; // 10s
+    xhr.timeout = TIMEOUT; // 10s
     xhr.open(method, url);
     xhr.send(data);
   };

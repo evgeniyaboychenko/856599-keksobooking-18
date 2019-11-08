@@ -7,7 +7,7 @@
   // добавление меток в фрагмент
   var createPinsFragment = function (dataLoad) {
     adsData = dataLoad;
-    var numberAds = adsData.length > 5 ? 5 : adsData.length;
+    var numberAds = adsData.length > window.util.numberPin ? window.util.numberPin : adsData.length;
     var fragment = document.createDocumentFragment();
     for (var i = 0; i < numberAds; i++) {
       if (adsData[i].offer) {
@@ -53,6 +53,18 @@
     flagShowCard = false;
   };
 
+
+  var showCardPin = function (pinActive) {
+    var pins = window.util.mapPins.querySelectorAll('.map__pin');
+    pins.forEach(function (pin, index) {
+      if (pin === pinActive) {
+        pinActive.classList.add('map__pin--active');
+        mapFiltersContainer.before(createCardPinFragment(index - 1));
+        flagShowCard = true;
+      }
+    });
+  };
+
   // создать карточку объявления при нажатии на метку
   var onPinClick = function (evt) {
     var pinClickMap = evt.target.closest('button[type="button"]');
@@ -62,14 +74,8 @@
     if (flagShowCard) {
       removeCard();
     }
-    var pins = window.util.mapPins.children;
-    for (var i = 0; i < pins.length; i++) {
-      if (pins[i] === pinClickMap) {
-        pinClickMap.classList.add('map__pin--active');
-        mapFiltersContainer.before(createCardPinFragment(i - 2));
-        flagShowCard = true;
-      }
-    }
+
+    showCardPin(pinClickMap);
 
     var popupCard = window.util.windowMap.querySelector('.map__card');
     var buttonClosePopup = popupCard.querySelector('.popup__close');

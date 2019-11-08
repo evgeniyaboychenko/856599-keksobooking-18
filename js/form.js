@@ -1,7 +1,7 @@
 'use strict';
 (function () {
   // -----------------------валидация формы-------------------------
-  var houseMinPriceMap = {palace: 10000, flat: 1000, house: 5000, bungalo: 0};
+  var MinPriceAccommodation = {PALACE: 10000, FLAT: 1000, HOUSE: 5000, BUNGALO: 0};
   var typeHouseField = window.util.formAd.querySelector('select[name="type"]');
   var priceField = window.util.formAd.querySelector('input[name="price"]');
   var timeInField = window.util.formAd.querySelector('select[name="timein"]');
@@ -11,7 +11,7 @@
   var roomField = window.util.formAd.querySelector('select[name="rooms"]');
   var guestField = window.util.formAd.querySelector('select[name="capacity"]');
 
-  var checkedTitleFields = function () {
+  var checkTitleFields = function () {
     var titleField = window.util.formAd.querySelector('input[name="title"]');
     titleField.addEventListener('invalid', function () {
       if (titleField.validity.tooShort) {
@@ -25,8 +25,7 @@
   };
 
   // стоимость по типу жилья
-
-  var onPriceFieldValidation = function (field) {
+  var onPriceFieldInvalid = function (field) {
     if (field.validity.valueMissing) {
       field.setCustomValidity('Введите цену');
     } else if (field.validity.stepMismatch) {
@@ -38,26 +37,26 @@
     }
   };
 
-  var determinateMinPriceHouse = function () {
-    priceField.setAttribute('placeholder', houseMinPriceMap[typeHouseField.value]);
-    priceField.setAttribute('min', houseMinPriceMap[typeHouseField.value]);
+  var determineMinPriceHouse = function () {
+    priceField.setAttribute('placeholder', MinPriceAccommodation[typeHouseField.value.toUpperCase()]);
+    priceField.setAttribute('min', MinPriceAccommodation[typeHouseField.value.toUpperCase()]);
   };
 
-  var checkedPriceFields = function () {
-    if (priceField.value < houseMinPriceMap[typeHouseField.value]) {
-      priceField.setCustomValidity('Минимальная стоимость для выбранного типа жилья должна быть выше ' + houseMinPriceMap[typeHouseField.value]);
+  var checkPriceFields = function () {
+    if (priceField.value < MinPriceAccommodation[typeHouseField.value.toUpperCase()]) {
+      priceField.setCustomValidity('Минимальная стоимость для выбранного типа жилья должна быть выше ' + MinPriceAccommodation[typeHouseField.value.toUpperCase()]);
     } else {
       priceField.setCustomValidity('');
     }
   };
 
-  var onMinPriceFieldValidation = function () {
-    determinateMinPriceHouse();
-    checkedPriceFields();
+  var onMinPriceFieldChange = function () {
+    determineMinPriceHouse();
+    checkPriceFields();
   };
 
   // проверка соответствия комнат кол-ву гостей
-  var onGuestsFieldValidation = function () {
+  var onGuestsFieldChange = function () {
     if (roomField.value === '1' && guestField.value !== '1') {
       guestField.setCustomValidity('Только 1 гость может быть для 1 комнаты ');
     } else if ((roomField.value === '2' && guestField.value === '3') || (roomField.value === '2' && guestField.value === '0')) {
@@ -72,27 +71,27 @@
   };
 
   // соответствие время выезда времени въезда
-  var matchFields = function (fieldFirst, fieldSecond) {
+  var setRelatedField = function (fieldFirst, fieldSecond) {
     fieldFirst.addEventListener('change', function () {
       fieldSecond.value = fieldFirst.value;
     });
   };
 
-  checkedTitleFields();
-  priceField.addEventListener('invalid', onPriceFieldValidation(priceField));
+  checkTitleFields();
+  priceField.addEventListener('invalid', onPriceFieldInvalid(priceField));
 
-  determinateMinPriceHouse();
-  typeHouseField.addEventListener('change', onMinPriceFieldValidation);
-  priceField.addEventListener('change', onMinPriceFieldValidation);
+  determineMinPriceHouse();
+  typeHouseField.addEventListener('change', onMinPriceFieldChange);
+  priceField.addEventListener('change', onMinPriceFieldChange);
 
-  onGuestsFieldValidation();
-  roomField.addEventListener('change', onGuestsFieldValidation);
-  guestField.addEventListener('change', onGuestsFieldValidation);
+  onGuestsFieldChange();
+  roomField.addEventListener('change', onGuestsFieldChange);
+  guestField.addEventListener('change', onGuestsFieldChange);
 
-  matchFields(timeInField, timeOutField);
-  matchFields(timeOutField, timeInField);
+  setRelatedField(timeInField, timeOutField);
+  setRelatedField(timeOutField, timeInField);
 
   window.form = {
-    resetFiledPrice: determinateMinPriceHouse
+    resetFiledPrice: determineMinPriceHouse
   };
 })();
