@@ -16,22 +16,26 @@
   var selectPrice = window.util.filterForm.querySelector('select[name="housing-price"]');
   var selectValueRooms = window.util.filterForm.querySelector('select[name="housing-rooms"]');
   var selectValueGuests = window.util.filterForm.querySelector('select[name="housing-guests"]');
+  var buttonAdFormSubmit = document.querySelector('.ad-form__submit');
   var mouseX;
   var mouseY;
   var isPinMainMouseDownSubscribed = true;
+  var ThresholdPrice = {FIRST: 10000, SECOND: 50000};
+  var CategoryPrice = {MIDDLE: 'middle', LOW: 'low', HIGH: 'high'};
+  var CoordinatesMovePinY = {START: 130, END: 630};
 
   // добавление атрибута 'disabled'
-  var setDisabledAttribute = function (field) {
-    for (var i = 0; i < field.length; i++) {
-      field[i].setAttribute('disabled', 'disabled');
-    }
+  var setDisabledAttribute = function (fields) {
+    fields.forEach(function (field) {
+      field.setAttribute('disabled', 'disabled');
+    });
   };
 
   // удаление атрибута 'disabled'
-  var removeDisabledAttribute = function (field) {
-    for (var i = 0; i < field.length; i++) {
-      field[i].removeAttribute('disabled');
-    }
+  var removeDisabledAttribute = function (fields) {
+    fields.forEach(function (field) {
+      field.removeAttribute('disabled');
+    });
   };
 
   // поля формы не активны
@@ -69,14 +73,14 @@
   };
 
   // активация формы при нажатии Enter на главную метку
-  var onActiveFormPressEnter = function (evt) {
+  var onMainPinEnterPress = function (evt) {
     if (evt.keyCode === window.util.enterKey) {
-      onActiveForm();
+      onMainPinMouseDown();
     }
   };
 
   // активация формы
-  var onActiveForm = function () {
+  var onMainPinMouseDown = function () {
     window.backend.load(onAddPin, onError);
     removeListenerActMapMain();
   };
@@ -117,27 +121,26 @@
 
   var filterAds = function (data) {
     var filtredAds = data;
+    var checkStringFilter = function (selectValue, parameter) {
+      if (selectValue !== 'any') {
+        return selectValue === parameter;
+      }
+      return true;
+    };
 
-    if (selectTypeHouse.value !== 'any') {
-      filtredAds = filtredAds.filter(function (ad) {
-        return selectTypeHouse.value === ad.offer.type;
-      });
-    }
-    if (selectPrice.value !== 'any') {
-      filtredAds = filtredAds.filter(function (ad) {
-        return selectPrice.value === getPriceCategory(ad.offer.price);
-      });
-    }
-    if (selectValueRooms.value !== 'any') {
-      filtredAds = filtredAds.filter(function (ad) {
-        return parseInt(selectValueRooms.value, 10) === ad.offer.rooms;
-      });
-    }
-    if (selectValueGuests.value !== 'any') {
-      filtredAds = filtredAds.filter(function (ad) {
-        return parseInt(selectValueGuests.value, 10) === ad.offer.guests;
-      });
-    }
+    var checkNumericFilter = function (selectValue, parameter) {
+      if (selectValue !== 'any') {
+        return parseInt(selectValue, 10) === parameter;
+      }
+      return true;
+    };
+
+    filtredAds = filtredAds.filter(function (ad) {
+      return checkStringFilter(selectTypeHouse.value, ad.offer.type) &&
+        checkStringFilter(selectPrice.value, getPriceCategory(ad.offer.price)) &&
+        checkNumericFilter(selectValueRooms.value, ad.offer.rooms) &&
+        checkNumericFilter(selectValueGuests.value, ad.offer.guests);
+    });
 
     formFiltersInput.forEach(function (input) {
       if (input.checked) {
@@ -152,28 +155,29 @@
   };
 
   var getPriceCategory = function (price) {
-    var category;
-    if (price < 10000) {
-      category = 'low';
-    } else if (price > 50000) {
-      category = 'high';
-    } else {
-      category = 'middle';
+    if (price < ThresholdPrice.FIRST) {
+      return CategoryPrice.LOW;
+    } else if (price > ThresholdPrice.SECOND) {
+      return CategoryPrice.HIGH;
     }
-    return category;
+    return CategoryPrice.MIDDLE;
+  };
+
+  var showErrorPopup = function (message) {
+    var templateError = document.querySelector('#error').content;
+    var cloneErrorPopup = templateError.cloneNode(true);
+    if (message) {
+      var p = cloneErrorPopup.querySelector('p');
+      p.textContent = message;
+    }
+    document.querySelector('main').appendChild(cloneErrorPopup);
   };
 
   // окно с ошибкой
   var onError = function (message) {
     unsubscribeMainPinMouseDown();
-
-    var templateError = document.querySelector('#error').content;
-    var cloneErrorPopup = templateError.cloneNode(true);
-    var p = cloneErrorPopup.querySelector('p');
-    p.textContent = message;
-    document.querySelector('main').appendChild(cloneErrorPopup);
+    showErrorPopup(message);
     var popupError = document.querySelector('.error');
-
     popupError.addEventListener('click', function (evt) {
       var buttonCloseClickPopup = evt.target.closest('.error__button');
       if (!buttonCloseClickPopup) {
@@ -186,14 +190,14 @@
 
   // удалить обработчики события
   var removeListenerActMapMain = function () {
-    mapPinMain.removeEventListener('mousedown', onActiveForm);
-    mapPinMain.removeEventListener('keydown', onActiveFormPressEnter);
+    mapPinMain.removeEventListener('mousedown', onMainPinMouseDown);
+    mapPinMain.removeEventListener('keydown', onMainPinEnterPress);
   };
 
   // добавить обработчики события
   var addListenerActMapMain = function () {
-    mapPinMain.addEventListener('mousedown', onActiveForm);
-    mapPinMain.addEventListener('keydown', onActiveFormPressEnter);
+    mapPinMain.addEventListener('mousedown', onMainPinMouseDown);
+    mapPinMain.addEventListener('keydown', onMainPinEnterPress);
   };
 
   // получить координаты метки на карте
@@ -202,9 +206,8 @@
       return rangeStart - distance;
     } else if (position + distance - shift > rangeEnd) {
       return rangeEnd - distance;
-    } else {
-      return (position - shift);
     }
+    return (position - shift);
   };
 
   var onMouseMove = function (evtMove) {
@@ -215,7 +218,7 @@
     mouseX = evtMove.clientX;
     mouseY = evtMove.clientY;
 
-    mapPinMain.style.top = getPositionPin(getAdressPositionPinMain().y, 130, 630, shiftY, heightMapMain + 16) + 'px';
+    mapPinMain.style.top = getPositionPin(getAdressPositionPinMain().y, CoordinatesMovePinY.START, CoordinatesMovePinY.END, shiftY, heightMapMain + 16) + 'px';
     mapPinMain.style.left = getPositionPin(getAdressPositionPinMain().x, 0, window.util.mapPins.clientWidth, shiftX, Math.round(widthMapMain / 2)) + 'px';
 
     setAddressOnPinMainMove();
@@ -243,11 +246,11 @@
 
   var resetPinMap = function () {
     var pins = window.util.mapPins.querySelectorAll('.map__pin');
-    for (var i = 0; i < pins.length; i++) {
-      if (!pins[i].classList.contains('map__pin--main')) {
-        pins[i].remove();
+    pins.forEach(function (pin) {
+      if (!pin.classList.contains('map__pin--main')) {
+        pin.remove();
       }
-    }
+    });
   };
 
   var resetMapForm = function () {
@@ -274,18 +277,19 @@
 
     var onClosePopupClick = function () {
       popupSuccess.remove();
+      buttonAdFormSubmit.removeAttribute('disabled');
       popupSuccess.removeEventListener('click', onClosePopupClick);
-      document.removeEventListener('keydown', onClosePopupEsc);
+      document.removeEventListener('keydown', onClosePopupEscPress);
     };
 
-    var onClosePopupEsc = function (evt) {
+    var onClosePopupEscPress = function (evt) {
       if (evt.keyCode === window.util.escKey) {
         onClosePopupClick();
       }
     };
 
     popupSuccess.addEventListener('click', onClosePopupClick);
-    document.addEventListener('keydown', onClosePopupEsc);
+    document.addEventListener('keydown', onClosePopupEscPress);
 
     resetMapForm();
     window.util.formAd.reset();
@@ -294,30 +298,34 @@
     window.photo.resetPreviewPhoto();
   };
 
+
   // окно с ошибкой
   var onErrorSave = function () {
-    var templateError = document.querySelector('#error').content;
-    var cloneErrorPopup = templateError.cloneNode(true);
-    document.querySelector('main').appendChild(cloneErrorPopup);
+    showErrorPopup();
     var popupError = document.querySelector('.error');
+
+    var closePopupError = function () {
+      popupError.remove();
+      buttonAdFormSubmit.removeAttribute('disabled');
+      document.removeEventListener('keydown', onPopupErrorEscPress);
+    };
 
     var onPopupErrorEscPress = function (evt) {
       if (evt.keyCode === window.util.escKey) {
-        popupError.remove();
-        document.removeEventListener('keydown', onPopupErrorEscPress);
+        closePopupError();
       }
     };
 
-    document.addEventListener('keydown', onPopupErrorEscPress);
-
-    popupError.addEventListener('click', function (evt) {
+    var onPopupErrorButtonClick = function (evt) {
       var buttonCloseClickPopup = evt.target.closest('.error__button');
       if (!buttonCloseClickPopup) {
         return;
       }
-      popupError.remove();
-      document.removeEventListener('keydown', onPopupErrorEscPress);
-    });
+      closePopupError();
+    };
+
+    document.addEventListener('keydown', onPopupErrorEscPress);
+    popupError.addEventListener('click', onPopupErrorButtonClick);
   };
 
   var onFilterChange = window.debounce(function () {
@@ -339,6 +347,7 @@
 
   window.util.formAd.addEventListener('submit', function (evt) {
     evt.preventDefault();
+    buttonAdFormSubmit.setAttribute('disabled', 'disabled');
     window.backend.save(new FormData(window.util.formAd), onSuccessSave, onErrorSave);
   });
 

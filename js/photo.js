@@ -51,9 +51,11 @@
     previewAvatar.src = defaultAvatarSrc;
     previewPhotoHouse.classList.remove('visually-hidden');
     var photosPreview = containerPhotoHouse.querySelectorAll('.ad-form__photo');
-    for (var i = 1; i < photosPreview.length; i++) {
-      photosPreview[i].remove();
-    }
+    photosPreview.forEach(function (photo, index) {
+      if (index !== 0) {
+        photo.remove();
+      }
+    });
   };
 
   changeAvatar(fileChooserAvatar, previewAvatar);
