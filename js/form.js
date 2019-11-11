@@ -11,6 +11,7 @@
   var roomField = window.util.formAd.querySelector('select[name="rooms"]');
   var guestField = window.util.formAd.querySelector('select[name="capacity"]');
 
+  // проверить заголовок объявления
   var checkTitleFields = function () {
     var titleField = window.util.formAd.querySelector('input[name="title"]');
     titleField.addEventListener('invalid', function () {
